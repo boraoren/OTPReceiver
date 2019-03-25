@@ -56,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(SmsRetriever.SMS_RETRIEVED_ACTION);
         registerReceiver(receiveOTP, intentFilter);
+
         requestHint();
     }
 
@@ -123,6 +124,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     @Override
     public void onOTPTimeOut() {
         tv_otp.setText("Timeout");
+        if (receiveOTP != null) {
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(receiveOTP);
+        }
         Toast.makeText(this, " SMS retriever API Timeout", Toast.LENGTH_SHORT).show();
     }
 
