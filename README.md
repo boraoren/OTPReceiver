@@ -13,6 +13,6 @@ OTP Receiver Without SMS Permission in Android Application
  #Add the dependency
  
  	dependencies {
-	        implementation 'com.github.mobileappsnk:OTPReceiver:Tag'
+	        implementation 'com.github.mobileappsnk:OTPReceiver:v1.1'
 	}
 
