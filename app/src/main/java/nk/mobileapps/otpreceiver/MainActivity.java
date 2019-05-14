@@ -213,7 +213,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                    // stopSelf();
                 }
             }, 1245,
-                    "", "POST");
+                    "reset service url", "POST");
 
 
             loginobj.loadRequest(jsonObject);
