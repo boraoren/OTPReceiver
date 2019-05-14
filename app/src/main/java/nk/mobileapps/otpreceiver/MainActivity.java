@@ -213,7 +213,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                    // stopSelf();
                 }
             }, 1245,
-                    "http://103.210.74.213/Dealer/api/Dealers/DealersLogin", "POST");
+                    "", "POST");
 
 
             loginobj.loadRequest(jsonObject);
