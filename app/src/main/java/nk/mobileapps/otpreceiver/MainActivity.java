@@ -22,12 +22,18 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import nk.mobileapps.otpreceiver.utils.ResponseListener;
+import nk.mobileapps.otpreceiver.utils.RestServiceWithVolle;
 import nk.mobileapps.otpreceiver_lib.OTPReceiver;
 
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, OTPReceiver.OTPReceiveListener {
-
+    public static final String TAG = MainActivity.class.getSimpleName();
     GoogleApiClient mCredentialsApiClient;
     TextView tv_otp;
     OTPReceiver receiveOTP;
@@ -53,11 +59,12 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         receiveOTP = new OTPReceiver();
         receiveOTP.initOTPListener(this);
 
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(SmsRetriever.SMS_RETRIEVED_ACTION);
-        registerReceiver(receiveOTP, intentFilter);
-
         requestHint();
+
+
+
+        startReceiver();
+
     }
 
     private void requestHint() {
@@ -130,6 +137,20 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         Toast.makeText(this, " SMS retriever API Timeout", Toast.LENGTH_SHORT).show();
     }
 
+    private void stopReceiver(){
+        if (receiveOTP != null) {
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(receiveOTP);
+        }
+    }
+
+    private void startReceiver(){
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(SmsRetriever.SMS_RETRIEVED_ACTION);
+        registerReceiver(receiveOTP, intentFilter);
+
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -139,8 +160,72 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             Credential credential = data.getParcelableExtra(Credential.EXTRA_KEY);
 
             Toast.makeText(this, " Phone Number:" + credential.getId(), Toast.LENGTH_SHORT).show();
-
+            startVerify(credential.getId().substring(3));
         }
+    }
+
+    private void startVerify(String phoneNo) {
+
+
+        // Communicate to background servers to send SMS and get the expect OTP
+        // notifyStatus(STATUS_REQUESTING, phoneNo);
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("MobileNo", phoneNo);
+            jsonObject.put("DealerType", "1");
+            jsonObject.put("DeviceID", "");
+            jsonObject.put("IMEI", "0");
+            jsonObject.put("Version", "1.0");
+
+              /*  String key[] = {"Data"};
+                String value[] = {jsonObject.toString()};*/
+
+            RestServiceWithVolle loginobj = new RestServiceWithVolle(this, new ResponseListener() {
+                @Override
+                public void onSuccess(int responseCode, String response) {
+                    try {
+                        JSONObject loginobject = new JSONObject(response);
+                        if (loginobject.getString("Status").trim().equalsIgnoreCase("200")) {
+                            Toast.makeText(MainActivity.this,
+                                    getString(R.string.verifier_server_response),
+                                    Toast.LENGTH_SHORT).show();
+                        } else {
+                            Log.e(TAG, "Unsuccessful request call.");
+                            Toast.makeText(MainActivity.this,
+                                    getString(R.string.toast_unverified), Toast.LENGTH_LONG).show();
+                           // stopSelf();
+                        }
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        Log.e(TAG, "Unsuccessful request call.");
+                        Toast.makeText(MainActivity.this,
+                                getString(R.string.toast_unverified), Toast.LENGTH_LONG).show();
+                        //stopSelf();
+                    }
+                }
+
+                @Override
+                public void onError(int responseCode, String error) {
+                    Log.d(TAG, "Error getting response");
+                    Toast.makeText(MainActivity.this,
+                            getString(R.string.toast_request_error), Toast.LENGTH_LONG).show();
+                   // stopSelf();
+                }
+            }, 1245,
+                    "http://103.210.74.213/Dealer/api/Dealers/DealersLogin", "POST");
+
+
+            loginobj.loadRequest(jsonObject);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+            Toast.makeText(MainActivity.this,
+                    getString(R.string.toast_request_error), Toast.LENGTH_LONG).show();
+            //stopSelf();
+        }
+
+
     }
 }
 

@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="nk.mobileapps.otpreceiver_lib">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application>
         <receiver
             android:name=".OTPReceiver"
